@@ -3,9 +3,14 @@ package edu.uconn.c3pro.server.auth.entities;
 public class Registration {
 	private boolean sandbox;
 	private String receipt_data;
+	
+	public Registration() {
+		
+	}
 
 	public Registration(boolean sandbox, String receipt_data) {
 		this.sandbox = sandbox;
+		this.receipt_data = receipt_data;
 	}
 
 	public boolean getSandbox() {
