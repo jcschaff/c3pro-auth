@@ -13,7 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -73,7 +74,7 @@ public class AuthController {
     		}
         String [] parts = auth64.split(" ");
         if (parts.length!=2) {
-            throw new UnauthorizedClientException("expecting 2 parts.");
+            throw new BadCredentialsException("expecting 2 parts.");
         }
         final String clientId;
         final String clientSecret;
@@ -85,17 +86,13 @@ public class AuthController {
             clientId = cred[0];
             clientSecret = cred[1];
         }catch (UnsupportedEncodingException e) {
-        		throw new UnauthorizedClientException("bad encoding of credentials");
+        		throw new InternalAuthenticationServiceException("bad encoding of credentials");
         }
         //
         // validate client credentials
         //
-        	if (authDatabase.validateClientCredentials(clientId,clientSecret)) {
-   			logger.info("authentication succeeded");
-    		}else {
-    			logger.info("authenticated failed, clientid/clientsecret not found");
-    			throw new UnauthorizedClientException("bad client credentials");
-    		}
+        	authDatabase.validateClientCredentials(clientId,clientSecret);
+		logger.info("authentication succeeded");
         //
         // create access tokens
         //

@@ -13,13 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientException;
 import org.springframework.stereotype.Service;
 
-import edu.uconn.c3pro.server.auth.entities.AuthenticationResponse;
 import edu.uconn.c3pro.server.auth.services.AuthDatabase;
 
 @Service
@@ -56,20 +54,19 @@ public class AuthDatabaseDb implements AuthDatabase {
 	}
 
 	@Override
-	public boolean validateClientCredentials(String clientId, String clientSecret) throws UnauthorizedClientException {
+	public void validateClientCredentials(String clientId, String clientSecret) throws BadCredentialsException {
         try (Connection con = dataSource.getConnection();
         		Statement stmt = con.createStatement();){
         		ResultSet rs = stmt.executeQuery("select count(*) from users where clientid = '"+clientId+"' and clientsecret = '"+clientSecret+"'");
         		if (rs.next()) {
         			logger.info("authentication succeeded");
-        			return true;
         		}else {
         			logger.info("authenticated failed, clientid/clientsecret not found");
-        			throw new UnauthorizedClientException("bad client credentials");
+        			throw new BadCredentialsException("bad client credentials");
         		}
         }catch (SQLException e) {
         		logger.error("SQLException while authenticating: "+e.getMessage(),e);
-        		throw new UnauthorizedClientException("bad client credentials");
+        		throw new InternalAuthenticationServiceException("bad client credentials");
         }
 	}
 
@@ -87,14 +84,14 @@ public class AuthDatabaseDb implements AuthDatabase {
         		int count = stmt.executeUpdate(insertSQL);
         		if (count!=1) {
         			logger.error("failed to save user token");
-        			throw new UnauthorizedClientException("failed to save user token");
+        			throw new InternalAuthenticationServiceException("failed to save user token");
         		}else {
         			logger.info("inserted token into database");
         		}
         } catch (SQLException e) {
 			e.printStackTrace();
 			logger.error("failed to insert access token: "+e.getMessage(),e);
-			throw new UnauthorizedClientException("failed to insert access token",e);
+			throw new InternalAuthenticationServiceException("failed to insert access token",e);
 		}
 	}
 
