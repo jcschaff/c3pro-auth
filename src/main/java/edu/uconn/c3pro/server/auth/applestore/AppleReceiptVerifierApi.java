@@ -5,14 +5,16 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import edu.uconn.c3pro.server.auth.config.AppConfig;
 import edu.uconn.c3pro.server.auth.services.AppleReceiptVerifier;
@@ -72,18 +74,21 @@ public class AppleReceiptVerifierApi implements AppleReceiptVerifier {
 		}
 		con.getInputStream().close();
 
-		JSONObject jsonRet = new JSONObject(sb.toString());
-		int status = jsonRet.getInt(APPLE_JSON_KEY_STATUS);
+		JsonParser jsonParser = new JsonParser();
+		JsonElement element = jsonParser.parse(sb.toString());
+
+		JsonObject obj = element.getAsJsonObject();
+		int status = obj.get(APPLE_JSON_KEY_STATUS).getAsInt();
 		boolean ret = false;
 		if (status == 0) {
-			JSONObject receiptJSON = jsonRet.getJSONObject(APPLE_JSON_KEY_RECEIPT);
+			JsonObject receiptJSON = obj.get(APPLE_JSON_KEY_RECEIPT).getAsJsonObject();
 			String bid = null;
 			try {
-				bid = receiptJSON.getString(APPLE_JSON_KEY_BUNDLE);
+				bid = receiptJSON.get(APPLE_JSON_KEY_BUNDLE).getAsString();
 				ret = bid.trim().toLowerCase().equals(env.getProperty(AppConfig.APP_IOS_ID).trim().toLowerCase());
 				if (ret)
 					status = 0;
-			} catch (JSONException e) {
+			} catch (RuntimeException e) {
 				logger.warn(APPLE_JSON_KEY_BUNDLE + " json field not found");
 				ret = env.getProperty(AppConfig.APP_IOS_VERIF_ENDPOINT).contains("sandbox");
 				if (ret)
