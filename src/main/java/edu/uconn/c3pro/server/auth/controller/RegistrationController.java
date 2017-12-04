@@ -1,22 +1,15 @@
 package edu.uconn.c3pro.server.auth.controller;
 
 import java.security.SecureRandom;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Base64;
 import java.util.Random;
 import java.util.UUID;
 
-import javax.sql.DataSource;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -25,26 +18,26 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import edu.uconn.c3pro.server.auth.entities.Registration;
 import edu.uconn.c3pro.server.auth.entities.RegistrationResponse;
+import edu.uconn.c3pro.server.auth.services.AntispamFilter;
+import edu.uconn.c3pro.server.auth.services.AppleReceiptVerifier;
+import edu.uconn.c3pro.server.auth.services.AuthDatabase;
 
 @Controller
 public class RegistrationController {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     	
-	@Autowired
-	DataSource dataSource;
-	
-	@Autowired
-	private PasswordEncoder passwordEncoder;
-	
+//	@Autowired
+//	DataSource dataSource;
+    
+    @Autowired
+    private AuthDatabase authDatabase;
+		
 	@Autowired
 	private AppleReceiptVerifier appleReceiptVerifier;
 	
 	@Autowired
 	private AntispamFilter antispamFilter;
 	
-    private static final String INSERT_USER = "Insert into Users values ('%s', '%s')";
-    private static final String INSERT_USER_ROLE = "Insert into UserRoles values ('%s', '%s')";
-    private static final String USER_ROLES = "AppUser";
 
 	/**
 	 * Registration request:
@@ -86,22 +79,11 @@ public class RegistrationController {
 //    			logger.error("failure during apple receipt verification: "+e.getMessage(),e);
 //    			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
 //    		}
-        try (Connection conn = dataSource.getConnection();
-        		Statement stmt = conn.createStatement();){
-
-            	// At this point the request is authorized. We generate the credentials
-            	String clientId = generateClientId();
-            	String password = generatePassword();
-            	String encPassword = passwordEncoder.encode(password);
-            	String insert = String.format(INSERT_USER,clientId, encPassword);
-            	String insertRoles = String.format(INSERT_USER_ROLE, clientId, USER_ROLES);
-
-            	stmt.execute(insert);
-            stmt.execute(insertRoles);
-        }catch (SQLException e) {
-        		logger.error("failed to insert new registration", e);
-        		throw new RuntimeException("invalid request");
-        }
+        	// At this point the request is authorized. We generate the credentials
+        	String clientId = generateClientId();
+        	String password = generatePassword();
+        	authDatabase.insertUser(clientId,password);
+        	
     		RegistrationResponse registrationResponse = new RegistrationResponse(generateClientId(),generatePassword());
     		return new ResponseEntity<RegistrationResponse>(registrationResponse, HttpStatus.CREATED);
     }

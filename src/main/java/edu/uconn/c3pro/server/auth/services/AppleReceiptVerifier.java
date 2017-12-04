@@ -1,4 +1,4 @@
-package edu.uconn.c3pro.server.auth.controller;
+package edu.uconn.c3pro.server.auth.services;
 
 public interface AppleReceiptVerifier {
 	

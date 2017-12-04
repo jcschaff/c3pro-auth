@@ -1,4 +1,4 @@
-package edu.uconn.c3pro.server.auth.controller;
+package edu.uconn.c3pro.server.auth.applestore;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -10,12 +10,15 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import edu.uconn.c3pro.server.auth.config.AppConfig;
+import edu.uconn.c3pro.server.auth.services.AppleReceiptVerifier;
 
-@Component
+@Service
+@Profile("default")
 public class AppleReceiptVerifierApi implements AppleReceiptVerifier {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 

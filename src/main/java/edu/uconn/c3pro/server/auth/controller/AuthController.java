@@ -3,23 +3,15 @@ package edu.uconn.c3pro.server.auth.controller;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.security.SecureRandom;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
 
-import javax.sql.DataSource;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.CacheControl;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.common.exceptions.UnauthorizedClientException;
 import org.springframework.stereotype.Controller;
@@ -29,14 +21,15 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import edu.uconn.c3pro.server.auth.entities.AuthenticationResponse;
+import edu.uconn.c3pro.server.auth.services.AntispamFilter;
+import edu.uconn.c3pro.server.auth.services.AuthDatabase;
 
 @Controller
 public class AuthController {
-    private static String BASIC_AUTH = "Basic";
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     	
 	@Autowired
-	DataSource dataSource;
+	AuthDatabase authDatabase;
 	
 	@Autowired
 	private AntispamFilter antispamFilter;
@@ -97,52 +90,25 @@ public class AuthController {
         //
         // validate client credentials
         //
-        try (Connection con = dataSource.getConnection();
-        		Statement stmt = con.createStatement();){
-        		ResultSet rs = stmt.executeQuery("select count(*) from users where clientid = '"+clientId+"' and clientsecret = '"+clientSecret+"'");
-        		if (rs.next()) {
-        			logger.info("authentication succeeded");
-        		}else {
-        			logger.info("authenticated failed, clientid/clientsecret not found");
-        			throw new UnauthorizedClientException("bad client credentials");
-        		}
-        }catch (SQLException e) {
-        		logger.error("SQLException while authenticating: "+e.getMessage(),e);
-        		throw new UnauthorizedClientException("bad client credentials");
-        }
+        	if (authDatabase.validateClientCredentials(clientId,clientSecret)) {
+   			logger.info("authentication succeeded");
+    		}else {
+    			logger.info("authenticated failed, clientid/clientsecret not found");
+    			throw new UnauthorizedClientException("bad client credentials");
+    		}
         //
         // create access tokens
         //
         String newToken = this.randomToken();
         Date date = new Date();
-        long aux=date.getTime();
-        
+        long aux=date.getTime();        
         int timeToLiveSeconds = DEFAULT_SECONDS;
-        AuthenticationResponse authenticationResponse = new AuthenticationResponse(newToken,timeToLiveSeconds);
         logger.info("client " + clientId + " authenticated. Access token has been generated");
-
         Date expirationDate = new Date(aux + (timeToLiveSeconds*ONE_SECOND_IN_MILLIS));
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd-HH:mm:ss");
-        String dateStr = dateFormat.format(expirationDate);
+        
+        authDatabase.insertUserToken(clientId, newToken, expirationDate);
 
-        String insertSQL = String.format("Insert into UserTokens values('%s', '%s', to_timestamp('%s', '%s'))",
-                clientId, newToken, dateStr, "YYYYMMDD-HH24:MI:SS");
-
-        try (Connection con = dataSource.getConnection();
-        		Statement stmt = con.createStatement();){
-        		
-        		int count = stmt.executeUpdate(insertSQL);
-        		if (count!=1) {
-        			return new ResponseEntity<AuthenticationResponse>(HttpStatus.INTERNAL_SERVER_ERROR);
-        		}else {
-        			logger.info("inserted token into database");
-        		}
-        } catch (SQLException e) {
-			e.printStackTrace();
-			logger.error("failed to insert access token: "+e.getMessage(),e);
-			return new ResponseEntity<AuthenticationResponse>(HttpStatus.BAD_REQUEST);
-		}
-
+        AuthenticationResponse authenticationResponse = new AuthenticationResponse(newToken,timeToLiveSeconds);
 		return ResponseEntity.ok()
 				.cacheControl(CacheControl.noCache())
 				.cacheControl(CacheControl.noStore())
