@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 @Profile("default")
 public class DefaultCredentialGenerator implements CredentialGenerator {
 
+    private static final SecureRandom secureRandom = new SecureRandom();
+    public static final int DEFAULT_TOKEN_SIZE= 64;
+
 	@Override
 	public String generateClientId() {
 		/**
@@ -28,5 +31,21 @@ public class DefaultCredentialGenerator implements CredentialGenerator {
         rnd.nextBytes(key);
         return Base64.getEncoder().encodeToString(key);
 	}
+	
+	@Override
+    /**
+     * Generate a random token that conforms to RFC 6750 Bearer Token
+     * @return a new token that is URL Safe (no '+' or '/' characters). */
+    public String generateRandomBearerToken() {
+        final String TOKEN_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz._";
+        byte[] bytes = new byte[DEFAULT_TOKEN_SIZE];
+        secureRandom.nextBytes(bytes);
+        StringBuilder sb = new StringBuilder(DEFAULT_TOKEN_SIZE);
+        for (byte b : bytes) {
+            sb.append(TOKEN_CHARS.charAt(b & 0x3F));
+        }
+        return sb.toString();
+    }
+
 
 }

@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import edu.uconn.c3pro.server.auth.entities.AuthenticationResponse;
 import edu.uconn.c3pro.server.auth.services.AntispamFilter;
 import edu.uconn.c3pro.server.auth.services.AuthDatabase;
+import edu.uconn.c3pro.server.auth.services.CredentialGenerator;
 
 @Controller
 public class AuthController {
@@ -32,8 +33,10 @@ public class AuthController {
 	@Autowired
 	AuthDatabase authDatabase;
 	
+	@Autowired
+	CredentialGenerator credentialGenerator;
+	
     public static final long ONE_SECOND_IN_MILLIS = 1000;
-    public static final int DEFAULT_TOKEN_SIZE= 64;
     public static final int DEFAULT_SECONDS = 3600;
 
     
@@ -95,7 +98,7 @@ public class AuthController {
         //
         // create access tokens
         //
-        String newToken = this.randomToken();
+        String newToken = credentialGenerator.generateRandomBearerToken();
         Date date = new Date();
         long aux=date.getTime();        
         int timeToLiveSeconds = DEFAULT_SECONDS;
@@ -111,34 +114,4 @@ public class AuthController {
 				.body(authenticationResponse);
     }
     
-    /**
-     * Generates a clientId. In the default implementation, it is a randomly generated UUID
-     * @return the new clientId
-     */
-    protected String generateClientId() {
-        return UUID.randomUUID().toString();
-    }
-
-    protected String generatePassword() {
-        Random rnd = new SecureRandom();
-        byte[] key = new byte[64];
-        rnd.nextBytes(key);
-        return Base64.getEncoder().encodeToString(key);
-    }
-       
-    /**
-     * Generate a random token that conforms to RFC 6750 Bearer Token
-     * @return a new token that is URL Safe (no '+' or '/' characters). */
-    protected String randomToken() {
-        final String TOKEN_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz._";
-        byte[] bytes = new byte[DEFAULT_TOKEN_SIZE];
-        secureRandom.nextBytes(bytes);
-        StringBuilder sb = new StringBuilder(DEFAULT_TOKEN_SIZE);
-        for (byte b : bytes) {
-            sb.append(TOKEN_CHARS.charAt(b & 0x3F));
-        }
-        return sb.toString();
-    }
-
-
 }

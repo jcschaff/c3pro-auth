@@ -1,0 +1,56 @@
+version: '2.1'
+
+services:
+
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - "4567-4582:4567-4582"
+      - "8080:8080"
+    environment:
+      - AWS_ACCESS_KEY_ID=foo
+      - AWS_SECRET_ACCESS_KEY=bar
+      - AWS_DEFAULT_REGION=ap-northeast-1
+      # SERVICES can be specified like 'kinesis,lambda:4569,sqs:4570'
+      - SERVICES=${SERVICES- }
+      # Error probability should be a decimal value between 0.0 and 1.0
+      - KINESIS_ERROR_PROBABILITY=${KINESIS_ERROR_PROBABILITY- }
+      - DYNAMODB_ERROR_PROBABILITY=${DYNAMODB_ERROR_PROBABILITY- }
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - DATA_DIR=/tmp/localstack
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/localstack:/tmp/localstack
+    restart: always
+    container_name: aws
+
+  cli:
+    image: mesosphere/aws-cli:latest
+    entrypoint: sh -c "apk --no-cache add bash less && tail -f /dev/null"
+    environment:
+      - AWS_ACCESS_KEY_ID=foo
+      - AWS_SECRET_ACCESS_KEY=bar
+      - AWS_DEFAULT_REGION=ap-northeast-1
+    restart: always
+    container_name: cli
+
+  c3proauth:
+    image: jcschaff/c3pro-server-auth
+    ports: 
+      - "8081:8081"
+    environment:
+      - JDBC_DRIVER_NAME=org.postgresql.Driver
+      - JDBC_URL=jdbc:postgresql://database:5432/docker
+      - JDBC_USER=docker
+      - JDBC_PASS=docker
+    container_name: c3proauth
+ 
+  database:
+    image: library/postgres:alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=docker
+      - POSTGRES_PASSWORD=docker
+      - POSTGRES_DB=docker
+    container_name: database
+ 
