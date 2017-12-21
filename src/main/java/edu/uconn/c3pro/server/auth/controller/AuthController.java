@@ -32,9 +32,6 @@ public class AuthController {
 	@Autowired
 	AuthDatabase authDatabase;
 	
-	@Autowired
-	private AntispamFilter antispamFilter;
-	
     public static final long ONE_SECOND_IN_MILLIS = 1000;
     public static final int DEFAULT_TOKEN_SIZE= 64;
     public static final int DEFAULT_SECONDS = 3600;
@@ -62,13 +59,15 @@ public class AuthController {
      */
     @RequestMapping(method = RequestMethod.POST, value = "/c3pro/auth", produces="application/json")
     public ResponseEntity<AuthenticationResponse> authenticate(
-    			@RequestHeader(name="Authorization", required=true) String auth64, 
-    			@RequestHeader(name="Antispam", required=true) String antispam, 
-    			@RequestParam(name="grant_type", required=true) String grantType) {
+    			@RequestHeader(name="Authorization", required=true) String auth64
+//    			@RequestHeader(name="Antispam", required=true) String antispam, 
+//    			@RequestHeader(name="grant_type", required=true) String grantType
+    			) {
     	
-		if (antispam == null || !antispamFilter.isValidAntispamToken(antispam)) {
-			logger.error("antispam token included in requestheader either missing or wrong, antispam = "+antispam); 
-		}
+//		if (antispam == null || !antispamFilter.isValidAntispamToken(antispam)) {
+//			logger.error("antispam token included in request header either missing or wrong, antispam = "+antispam);
+//			throw new IllegalArgumentException("antispam token included in request header either missing or wrong");
+//		}
     		if (auth64 == null || !auth64.toLowerCase().startsWith("Basic".toLowerCase())) {
     			logger.error("expecting Basic Authentication in Header, authentication "+auth64); 
     		}

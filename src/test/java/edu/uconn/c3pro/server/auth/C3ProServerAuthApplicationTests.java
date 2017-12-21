@@ -16,6 +16,7 @@ import edu.uconn.c3pro.server.auth.controller.RegistrationController;
 import edu.uconn.c3pro.server.auth.services.AntispamFilter;
 import edu.uconn.c3pro.server.auth.services.AppleReceiptVerifier;
 import edu.uconn.c3pro.server.auth.services.AuthDatabase;
+import edu.uconn.c3pro.server.auth.services.CredentialGenerator;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -39,6 +40,11 @@ public class C3ProServerAuthApplicationTests {
 	    		AntispamFilter antispamFilter = Mockito.mock(AntispamFilter.class);
 	    		return antispamFilter;
 	    }		
+	    @Bean
+	    public CredentialGenerator credentialsGenerator() {
+	    		CredentialGenerator credentialGenerator = Mockito.mock(CredentialGenerator.class);
+	    		return credentialGenerator;
+	    }		
 	}
     @Autowired
     private RegistrationController registrationController;
@@ -46,10 +52,13 @@ public class C3ProServerAuthApplicationTests {
     @Autowired
     private AuthController authController;
     
+    @Autowired
+    private AntispamFilter antispamFilter;
+    
  	@Test
 	public void contextLoads() {
 		Assertions.assertThat(registrationController).isNotNull();
 		Assertions.assertThat(authController).isNotNull();
 	}
-
+ 	
 }

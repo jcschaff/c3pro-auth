@@ -29,23 +29,23 @@ public class AntispamFilterDb implements AntispamFilter {
 
 	@Override
 	public boolean isValidAntispamToken(String antispamToken) {
-	        try (Connection con = dataSource.getConnection();
-	        		Statement stmt = con.createStatement();){
-	            String query = "SELECT token from antispamtoken";
+        try (Connection con = dataSource.getConnection();
+        		Statement stmt = con.createStatement();){
+            String query = "SELECT token from antispamtoken";
 
-	            try (ResultSet rs = stmt.executeQuery(query);){
-	            		if (rs.next()) {
-	            			String previouslyEncodedAntispamToken = rs.getString("token");
-	            			boolean matches = passwordEncoder.matches(antispamToken, previouslyEncodedAntispamToken);
-	            			return matches;
-	            		}
-	            }
-	            if (logger.isDebugEnabled()) {
-		    			String typicalEncoding = passwordEncoder.encode(antispamToken);
-		    			logger.debug("Antispam Token: '"+antispamToken+"' encoding: '"+typicalEncoding+"'");
-		    			logger.debug("HINT: insert into antispamtoken values ('"+typicalEncoding+"')");
-	            }
-	            return false;
+            try (ResultSet rs = stmt.executeQuery(query);){
+            		if (rs.next()) {
+            			String previouslyEncodedAntispamToken = rs.getString("token");
+            			boolean matches = passwordEncoder.matches(antispamToken, previouslyEncodedAntispamToken);
+            			return matches;
+            		}
+            }
+            if (logger.isDebugEnabled()) {
+	    			String typicalEncoding = passwordEncoder.encode(antispamToken);
+	    			logger.debug("Antispam Token: '"+antispamToken+"' encoding: '"+typicalEncoding+"'");
+	    			logger.debug("HINT: insert into antispamtoken values ('"+typicalEncoding+"')");
+            }
+            return false;
 		} catch (SQLException e) {
 			logger.error("failed to query antispamtoken: "+e.getMessage(), e);
 			return false;

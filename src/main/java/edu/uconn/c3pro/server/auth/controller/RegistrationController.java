@@ -21,6 +21,7 @@ import edu.uconn.c3pro.server.auth.entities.RegistrationResponse;
 import edu.uconn.c3pro.server.auth.services.AntispamFilter;
 import edu.uconn.c3pro.server.auth.services.AppleReceiptVerifier;
 import edu.uconn.c3pro.server.auth.services.AuthDatabase;
+import edu.uconn.c3pro.server.auth.services.CredentialGenerator;
 
 @Controller
 public class RegistrationController {
@@ -30,13 +31,16 @@ public class RegistrationController {
 //	DataSource dataSource;
     
     @Autowired
-    private AuthDatabase authDatabase;
+    AuthDatabase authDatabase;
 		
 	@Autowired
-	private AppleReceiptVerifier appleReceiptVerifier;
+	AppleReceiptVerifier appleReceiptVerifier;
+	
+	@Autowired 
+	AntispamFilter antispamFilter;
 	
 	@Autowired
-	private AntispamFilter antispamFilter;
+	CredentialGenerator credentialGenerator;
 	
 
 	/**
@@ -67,41 +71,27 @@ public class RegistrationController {
     			@RequestBody Registration registration) {
     	
     		if (antispam == null || !antispamFilter.isValidAntispamToken(antispam)) {
-    			logger.error("antispam token included in requestheader either missing or wrong, antispam = "+antispam); 
+    			logger.error("antispam token included in request header either missing or wrong, antispam = "+antispam); 
+    			throw new IllegalArgumentException("antispam token included in request header either missing or wrong");
     		}
-//    		try {
-//	    		boolean bReceiptValidated = appleReceiptVerifier.verifyReceipt(registration.getContent());
-//	    		if (!bReceiptValidated) {
-//	    			logger.warn("failed to validate apple receipt");
-//	    			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-//	    		}
-//    		}catch (Exception e) {
-//    			logger.error("failure during apple receipt verification: "+e.getMessage(),e);
-//    			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-//    		}
+    		try {
+	    		boolean bReceiptValidated = appleReceiptVerifier.verifyReceipt(registration.getContent());
+	    		if (!bReceiptValidated) {
+	    			logger.warn("failed to validate apple receipt");
+	    			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+	    		}
+    		}catch (Exception e) {
+    			logger.error("failure during apple receipt verification: "+e.getMessage(),e);
+    			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    		}
         	// At this point the request is authorized. We generate the credentials
-        	String clientId = generateClientId();
-        	String password = generatePassword();
+        	String clientId = credentialGenerator.generateClientId();
+        	String password = credentialGenerator.generatePassword();
         	authDatabase.insertUser(clientId,password);
         	
-    		RegistrationResponse registrationResponse = new RegistrationResponse(generateClientId(),generatePassword());
+    		RegistrationResponse registrationResponse = new RegistrationResponse(clientId,password);
     		return new ResponseEntity<RegistrationResponse>(registrationResponse, HttpStatus.CREATED);
     }
     
-     /**
-     * Generates a clientId. In the default implementation, it is a randomly generated UUID
-     * @return the new clientId
-     */
-    private String generateClientId() {
-        return UUID.randomUUID().toString();
-    }
-
-    private String generatePassword() {
-        Random rnd = new SecureRandom();
-        byte[] key = new byte[64];
-        rnd.nextBytes(key);
-        return Base64.getEncoder().encodeToString(key);
-    }
-
             
 }

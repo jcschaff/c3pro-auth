@@ -15,6 +15,8 @@ import edu.uconn.c3pro.server.auth.applestore.AppleReceiptVerifierApi;
 import edu.uconn.c3pro.server.auth.database.AuthDatabaseDb;
 import edu.uconn.c3pro.server.auth.services.AppleReceiptVerifier;
 import edu.uconn.c3pro.server.auth.services.AuthDatabase;
+import edu.uconn.c3pro.server.auth.services.CredentialGenerator;
+import edu.uconn.c3pro.server.auth.services.DefaultCredentialGenerator;
 
 @Configuration
 public class ServiceConfig {
@@ -51,6 +53,13 @@ public class ServiceConfig {
 	public AppleReceiptVerifier appleReceiptVerifier() {
 		AppleReceiptVerifierApi appleReceiptVerifier = new AppleReceiptVerifierApi();
 		return appleReceiptVerifier;
+	}
+    
+	@Bean
+	@Profile("default")
+	public CredentialGenerator credentialGenerator() {
+		DefaultCredentialGenerator credentialGenerator = new DefaultCredentialGenerator();
+		return credentialGenerator;
 	}
     
 
