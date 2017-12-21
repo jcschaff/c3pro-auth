@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>edu.uconn</groupId>
-	<artifactId>c3pro-server-auth</artifactId>
+	<artifactId>c3pro-auth</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
@@ -23,7 +23,7 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
 		<oauth.version>2.0.14.RELEASE</oauth.version>
-		<docker.image.prefix>jcschaff</docker.image.prefix>
+		<docker.image.prefix>schaff</docker.image.prefix>
 	</properties>
 
 	<dependencies>
@@ -81,6 +81,7 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+<!--
 			<plugin>
 				<groupId>com.spotify</groupId>
 				<artifactId>dockerfile-maven-plugin</artifactId>
@@ -92,6 +93,7 @@
 					</buildArgs>
 				</configuration>
 			</plugin>
+-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>

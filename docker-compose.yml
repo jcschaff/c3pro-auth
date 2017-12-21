@@ -35,7 +35,7 @@ services:
     container_name: cli
 
   c3proauth:
-    image: jcschaff/c3pro-server-auth
+    image: schaff/c3pro-auth
     ports: 
       - "8081:8081"
     environment:
