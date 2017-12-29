@@ -13,9 +13,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 
 import edu.uconn.c3pro.server.auth.applestore.AppleReceiptVerifierApi;
-import edu.uconn.c3pro.server.auth.database.AuthDatabaseDynamoDB;
 import edu.uconn.c3pro.server.auth.services.AppleReceiptVerifier;
-import edu.uconn.c3pro.server.auth.services.AuthDatabase;
 import edu.uconn.c3pro.server.auth.services.CredentialGenerator;
 import edu.uconn.c3pro.server.auth.services.DefaultCredentialGenerator;
 

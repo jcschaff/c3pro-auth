@@ -1,10 +1,5 @@
 package edu.uconn.c3pro.server.auth.controller;
 
-import java.security.SecureRandom;
-import java.util.Base64;
-import java.util.Random;
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
