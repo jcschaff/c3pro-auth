@@ -8,6 +8,7 @@ MAINTAINER Jim Schaff <schaff@uchc.edu>
 ARG JAR_FILE=c3pro-auth-0.0.1-SNAPSHOT.jar
 COPY --from=build /app/target/${JAR_FILE} /app.jar
 EXPOSE 443
+VOLUME /cert
 ENTRYPOINT ["java", \
 			"-Djava.security.egd=file:/dev/./urandom", \
 			"-jar","/app.jar"]
