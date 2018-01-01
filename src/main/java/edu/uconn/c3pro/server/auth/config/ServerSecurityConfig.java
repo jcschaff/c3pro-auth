@@ -29,6 +29,7 @@ public class ServerSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
     		http.csrf().disable();
         http.authorizeRequests()
+        .antMatchers("/health").permitAll()
         .antMatchers("/c3pro/register").permitAll()
         .antMatchers("/c3pro/auth").permitAll()
         .anyRequest().denyAll();

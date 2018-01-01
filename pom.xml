@@ -86,8 +86,7 @@
 		    <artifactId>aws-java-sdk-kms</artifactId>
 		    <version>1.11.255</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-config-client -->
- 	</dependencies>
+    	</dependencies>
 
 	<build>
 		<plugins>
