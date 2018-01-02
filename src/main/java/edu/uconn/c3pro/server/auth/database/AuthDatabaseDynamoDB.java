@@ -1,6 +1,7 @@
 package edu.uconn.c3pro.server.auth.database;
 
 import java.nio.charset.Charset;
+import java.security.Security;
 import java.util.Date;
 import java.util.Set;
 import java.util.zip.CRC32;
@@ -26,6 +27,7 @@ import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
 import com.amazonaws.util.DateUtils;
 
+import edu.uconn.c3pro.server.auth.config.ServiceConfig;
 import edu.uconn.c3pro.server.auth.services.AuthDatabase;
 
 @Service
@@ -39,32 +41,32 @@ public class AuthDatabaseDynamoDB implements AuthDatabase {
 	@Autowired
 	PasswordEncoder passwordEncoder;
 	
-	@DynamoDBTable(tableName="c3pro_user")
+	@DynamoDBTable(tableName="c3pro_users")
 	public static class C3pro_user {
-	    private Long id;
+	    private String id;
 	    private String clientid;
 	    private String clientsecret;
-	    private Set<String> roles;
+	    //private Set<String> roles;
 	 
 	    // Not encrypted because it is a hash key    
-	    @DynamoDBHashKey(attributeName="Id")  
-	    public Long getId() { return id;}
-	    public void setId(Long id) {this.id = id;}
+	    @DynamoDBHashKey(attributeName="id")  
+	    public String getId() { return id;}
+	    public void setId(String id) {this.id = id;}
 	 
 	    // Encrypted by default
-	    @DynamoDBAttribute(attributeName="Clientid")  
+	    @DynamoDBAttribute(attributeName="clientid")  
 	    public String getClientid() {return clientid; }
 	    public void setClientid(String clientid) { this.clientid = clientid; }
 	 
 	    // Encrypted by default
-	    @DynamoDBAttribute(attributeName="Clientsecret")  
+	    @DynamoDBAttribute(attributeName="clientsecret")  
 	    public String getClientsecret() {return clientsecret; }
 	    public void setClientsecret(String clientsecret) { this.clientsecret = clientsecret; }
 	 
 	    // Encrypted by default
-	    @DynamoDBAttribute(attributeName = "Roles")
-	    public Set<String> getRoles() { return roles; }
-	    public void setRoles(Set<String> roles) { this.roles = roles; }
+	   // @DynamoDBAttribute(attributeName = "roles")
+	   // public Set<String> getRoles() { return roles; }
+	   // public void setRoles(Set<String> roles) { this.roles = roles; }
 	    
 	    static long calculateId(String clientId) {
 			CRC32 crc = new CRC32();
@@ -74,30 +76,30 @@ public class AuthDatabaseDynamoDB implements AuthDatabase {
 	    }
 	}
 	
-	@DynamoDBTable(tableName="c3pro_token")
+	@DynamoDBTable(tableName="c3pro_usertokens")
 	public static class C3pro_token {
-	    private Long id;
+	    private String id;
 	    private String clientid;
 	    private String token;
 	    private String date_ISO8601;
 	 
 	    // Not encrypted because it is a hash key    
-	    @DynamoDBHashKey(attributeName="Id")  
-	    public Long getId() { return id;}
-	    public void setId(Long id) {this.id = id;}
+	    @DynamoDBHashKey(attributeName="id")  
+	    public String getId() { return id;}
+	    public void setId(String id) {this.id = id;}
 	 
 	    // Encrypted by default
-	    @DynamoDBAttribute(attributeName="Clientid")  
+	    @DynamoDBAttribute(attributeName="clientid")  
 	    public String getClientid() {return clientid; }
 	    public void setClientid(String clientid) { this.clientid = clientid; }
 	 
 	    // Encrypted by default
-	    @DynamoDBAttribute(attributeName="Token")  
+	    @DynamoDBAttribute(attributeName="token")  
 	    public String getToken() {return token; }
 	    public void setToken(String token) { this.token = token; }
 	 
 	    // Encrypted by default
-	    @DynamoDBAttribute(attributeName = "Datestring")
+	    @DynamoDBAttribute(attributeName = "datestring")
 	    public String getDate_ISO8601() { return date_ISO8601; }
 	    public void setDate_ISO8601(String date_ISO8601) { this.date_ISO8601 = date_ISO8601; }
 	    
@@ -110,10 +112,12 @@ public class AuthDatabaseDynamoDB implements AuthDatabase {
 	}
 	
 	private DynamoDBMapper getDynamoDBMapper() {
-		AWSKMS kms = AWSKMSClientBuilder.defaultClient();
-		String encryptionKeyId = "49f7001f-840a-44c8-8d57-58553ae3c671"; // alias is "c3pro_dynamodb_encrypt"
-	    EncryptionMaterialsProvider provider = new DirectKmsMaterialProvider(kms,encryptionKeyId);        
-	    DynamoDBMapper mapper = new DynamoDBMapper(dynamodb, DynamoDBMapperConfig.DEFAULT,new AttributeEncryptor(provider));
+//		ServiceConfig.fixKeyLength();
+//		AWSKMS kms = AWSKMSClientBuilder.standard().build();
+//		String encryptionKeyId = "49f7001f-840a-44c8-8d57-58553ae3c671"; // alias is "c3pro_dynamodb_encrypt"
+//	    EncryptionMaterialsProvider provider = new DirectKmsMaterialProvider(kms,encryptionKeyId);        
+//	    DynamoDBMapper mapper = new DynamoDBMapper(dynamodb, DynamoDBMapperConfig.DEFAULT,new AttributeEncryptor(provider));
+	    DynamoDBMapper mapper = new DynamoDBMapper(dynamodb, DynamoDBMapperConfig.DEFAULT);
 		return mapper;
 	}
 
@@ -121,13 +125,14 @@ public class AuthDatabaseDynamoDB implements AuthDatabase {
 	public void insertUser(String clientId, String password) {
 		C3pro_user user = new C3pro_user();
 		long id = C3pro_user.calculateId(clientId);
-		user.setId(id);
+		user.setId(Long.toString(id));
 		user.setClientid(clientId);
 		String encPassword = passwordEncoder.encode(password);
 		user.setClientsecret(encPassword);
 		
 		DynamoDBMapper mapper = getDynamoDBMapper();
 		mapper.save(user);
+		logger.info("inserted user into database");
 	}
 
 	@Override
@@ -148,7 +153,7 @@ public class AuthDatabaseDynamoDB implements AuthDatabase {
 		String dateStr = DateUtils.formatISO8601Date(expirationDate);
 
 		C3pro_token token = new C3pro_token();
-		token.setId(C3pro_token.calculateId(clientId));
+		token.setId(Long.toString(C3pro_token.calculateId(clientId)));
 		token.setClientid(clientId);
 		token.setToken(newToken);
 		token.setDate_ISO8601(dateStr);

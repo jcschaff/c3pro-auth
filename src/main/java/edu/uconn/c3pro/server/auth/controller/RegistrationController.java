@@ -70,7 +70,7 @@ public class RegistrationController {
     			throw new IllegalArgumentException("antispam token included in request header either missing or wrong");
     		}
     		try {
-	    		boolean bReceiptValidated = appleReceiptVerifier.verifyReceipt(registration.getContent());
+	    		boolean bReceiptValidated = appleReceiptVerifier.verifyReceipt(registration.getReceiptData());
 	    		if (!bReceiptValidated) {
 	    			logger.warn("failed to validate apple receipt");
 	    			return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();

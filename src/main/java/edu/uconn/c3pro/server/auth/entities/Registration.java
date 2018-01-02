@@ -1,5 +1,8 @@
 package edu.uconn.c3pro.server.auth.entities;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonSetter;
+
 public class Registration {
 	private boolean sandbox;
 	private String receipt_data;
@@ -13,19 +16,23 @@ public class Registration {
 		this.receipt_data = receipt_data;
 	}
 
+	@JsonGetter("sandbox")
 	public boolean getSandbox() {
 		return sandbox;
 	}
 
-	public void setId(boolean sandbox) {
+	@JsonSetter("sandbox")
+	public void setSandbox(boolean sandbox) {
 		this.sandbox = sandbox;
 	}
 
-	public String getContent() {
+	@JsonGetter("receipt-data")
+	public String getReceiptData() {
 		return receipt_data;
 	}
 
-	public void setContent(String receipt_data) {
+	@JsonSetter("receipt-data")
+	public void setReceiptData(String receipt_data) {
 		this.receipt_data = receipt_data;
 	}
 

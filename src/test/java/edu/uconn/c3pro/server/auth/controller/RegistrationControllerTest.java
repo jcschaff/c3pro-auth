@@ -42,8 +42,8 @@ public class RegistrationControllerTest {
  		Mockito.when(antispamFilter.isValidAntispamToken(ANTISPAM_GOOD)).thenReturn(true);
  		
  		AppleReceiptVerifier appleReceiptVerifier = Mockito.mock(AppleReceiptVerifier.class);
- 		Mockito.when(appleReceiptVerifier.verifyReceipt(REGISTRATION_GOOD.getContent())).thenReturn(true);
- 		Mockito.when(appleReceiptVerifier.verifyReceipt(REGISTRATION_BAD.getContent())).thenReturn(false);
+ 		Mockito.when(appleReceiptVerifier.verifyReceipt(REGISTRATION_GOOD.getReceiptData())).thenReturn(true);
+ 		Mockito.when(appleReceiptVerifier.verifyReceipt(REGISTRATION_BAD.getReceiptData())).thenReturn(false);
 
 		AuthDatabase authDatabase = Mockito.mock(AuthDatabase.class);
 
