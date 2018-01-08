@@ -33,7 +33,7 @@ public class AuthDatabaseDynamoDBTest {
 
         authDatabaseDynamoDB.insertUser(clientId, password);
 
-		String newToken = credentialGenerator.generateRandomBearerToken();
+		String newToken = credentialGenerator.generateJwtBearerToken(clientId);
         Date date = new Date();
         long aux=date.getTime();        
         final long ONE_SECOND_IN_MILLIS = 1000;

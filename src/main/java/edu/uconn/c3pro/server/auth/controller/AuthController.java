@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import edu.uconn.c3pro.server.auth.config.AppConfig;
 import edu.uconn.c3pro.server.auth.entities.AuthenticationResponse;
 import edu.uconn.c3pro.server.auth.services.AuthDatabase;
 import edu.uconn.c3pro.server.auth.services.CredentialGenerator;
@@ -94,16 +95,17 @@ public class AuthController {
         //
         // create access tokens
         //
-        String newToken = credentialGenerator.generateRandomBearerToken();
+        String token = credentialGenerator.generateJwtBearerToken(clientId);
+        
         Date date = new Date();
         long aux=date.getTime();        
         int timeToLiveSeconds = DEFAULT_SECONDS;
         logger.info("client " + clientId + " authenticated. Access token has been generated");
         Date expirationDate = new Date(aux + (timeToLiveSeconds*ONE_SECOND_IN_MILLIS));
         
-        authDatabase.insertUserToken(clientId, newToken, expirationDate);
+        authDatabase.insertUserToken(clientId, token, expirationDate);
 
-        AuthenticationResponse authenticationResponse = new AuthenticationResponse(newToken,timeToLiveSeconds);
+        AuthenticationResponse authenticationResponse = new AuthenticationResponse(token,timeToLiveSeconds);
 		return ResponseEntity.ok()
 				.cacheControl(CacheControl.noCache())
 				.cacheControl(CacheControl.noStore())

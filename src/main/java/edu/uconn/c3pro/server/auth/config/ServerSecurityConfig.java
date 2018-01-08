@@ -10,6 +10,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 
@@ -28,11 +29,13 @@ public class ServerSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
     		http.csrf().disable();
+    		http.cors().disable();
         http.authorizeRequests()
-        .antMatchers("/health").permitAll()
-        .antMatchers("/c3pro/register").permitAll()
-        .antMatchers("/c3pro/auth").permitAll()
-        .anyRequest().denyAll();
+        		.antMatchers("/health").permitAll()			 // not to be exposed to public api (used for internal health monitoring)
+        		.antMatchers("/c3pro/register").permitAll()
+        		.antMatchers("/c3pro/auth").permitAll()   // with the initial clientId and clientSecret to request a JWT token
+        		.anyRequest().denyAll();
+        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
     
     /**

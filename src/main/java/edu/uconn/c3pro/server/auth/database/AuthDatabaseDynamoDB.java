@@ -68,11 +68,11 @@ public class AuthDatabaseDynamoDB implements AuthDatabase {
 	   // public Set<String> getRoles() { return roles; }
 	   // public void setRoles(Set<String> roles) { this.roles = roles; }
 	    
-	    static long calculateId(String clientId) {
+	    static String calculateId(String clientId) {
 			CRC32 crc = new CRC32();
 			crc.update(clientId.getBytes(Charset.forName("utf-8")));
 			long crcValue = crc.getValue();
-			return crcValue;
+			return Long.toString(crcValue);
 	    }
 	}
 	
@@ -103,11 +103,11 @@ public class AuthDatabaseDynamoDB implements AuthDatabase {
 	    public String getDate_ISO8601() { return date_ISO8601; }
 	    public void setDate_ISO8601(String date_ISO8601) { this.date_ISO8601 = date_ISO8601; }
 	    
-	    static long calculateId(String clientId) {
+	    static String calculateId(String clientId) {
 			CRC32 crc = new CRC32();
 			crc.update(clientId.getBytes(Charset.forName("utf-8")));
 			long crcValue = crc.getValue();
-			return crcValue;
+			return Long.toString(crcValue);
 	    }
 	}
 	
@@ -124,23 +124,23 @@ public class AuthDatabaseDynamoDB implements AuthDatabase {
 	@Override
 	public void insertUser(String clientId, String password) {
 		C3pro_user user = new C3pro_user();
-		long id = C3pro_user.calculateId(clientId);
-		user.setId(Long.toString(id));
+		user.setId(C3pro_user.calculateId(clientId));
 		user.setClientid(clientId);
 		String encPassword = passwordEncoder.encode(password);
 		user.setClientsecret(encPassword);
 		
 		DynamoDBMapper mapper = getDynamoDBMapper();
 		mapper.save(user);
-		logger.info("inserted user into database");
+		logger.info("inserted user into database, clientid="+clientId+", rawPassword="+password);
 	}
 
 	@Override
 	public void validateClientCredentials(String clientId, String clientSecret) throws BadCredentialsException {
 		DynamoDBMapper mapper = getDynamoDBMapper();
+		logger.info("validating sent credentials, clientid="+clientId+", rawPassword="+clientSecret);
 		C3pro_user user = mapper.load(C3pro_user.class, C3pro_user.calculateId(clientId));
-		String encPassword = passwordEncoder.encode(clientSecret);
-		if (user.getClientsecret().equals(encPassword)){
+		logger.info("found user in database, clientid="+clientId+", encPassword="+user.getClientsecret());
+		if (passwordEncoder.matches(clientSecret,user.getClientsecret())){
 			logger.info("authentication succeeded");
 		} else {			
 			logger.info("authenticated failed, clientid/clientsecret not found");
@@ -153,7 +153,7 @@ public class AuthDatabaseDynamoDB implements AuthDatabase {
 		String dateStr = DateUtils.formatISO8601Date(expirationDate);
 
 		C3pro_token token = new C3pro_token();
-		token.setId(Long.toString(C3pro_token.calculateId(clientId)));
+		token.setId(C3pro_token.calculateId(clientId));
 		token.setClientid(clientId);
 		token.setToken(newToken);
 		token.setDate_ISO8601(dateStr);

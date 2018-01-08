@@ -2,11 +2,16 @@ package edu.uconn.c3pro.server.auth.services;
 
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.Date;
 import java.util.Random;
 import java.util.UUID;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+
+import edu.uconn.c3pro.server.auth.config.AppConfig;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 
 @Service
 @Profile("default")
@@ -32,20 +37,31 @@ public class DefaultCredentialGenerator implements CredentialGenerator {
         return Base64.getEncoder().encodeToString(key);
 	}
 	
+//	@Override
+//    /**
+//     * Generate a random token that conforms to RFC 6750 Bearer Token
+//     * @return a new token that is URL Safe (no '+' or '/' characters). */
+//    public String generateRandomBearerToken() {
+//        final String TOKEN_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz._";
+//        byte[] bytes = new byte[DEFAULT_TOKEN_SIZE];
+//        secureRandom.nextBytes(bytes);
+//        StringBuilder sb = new StringBuilder(DEFAULT_TOKEN_SIZE);
+//        for (byte b : bytes) {
+//            sb.append(TOKEN_CHARS.charAt(b & 0x3F));
+//        }
+//        return sb.toString();
+//    }
+
 	@Override
-    /**
-     * Generate a random token that conforms to RFC 6750 Bearer Token
-     * @return a new token that is URL Safe (no '+' or '/' characters). */
-    public String generateRandomBearerToken() {
-        final String TOKEN_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz._";
-        byte[] bytes = new byte[DEFAULT_TOKEN_SIZE];
-        secureRandom.nextBytes(bytes);
-        StringBuilder sb = new StringBuilder(DEFAULT_TOKEN_SIZE);
-        for (byte b : bytes) {
-            sb.append(TOKEN_CHARS.charAt(b & 0x3F));
-        }
-        return sb.toString();
-    }
+	public String generateJwtBearerToken(String clientId) {
+		Date timeout = new Date(System.currentTimeMillis() + AppConfig.EXPIRATION_TIME);
+        String token = Jwts.builder()
+                .setSubject(clientId)
+                .setExpiration(timeout)
+                .signWith(SignatureAlgorithm.HS512, AppConfig.SECRET.getBytes())
+                .compact();
+        return token;
+	}
 
 
 }

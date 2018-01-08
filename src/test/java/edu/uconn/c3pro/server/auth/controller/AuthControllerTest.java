@@ -41,7 +41,7 @@ public class AuthControllerTest {
 		Mockito.doThrow(BadCredentialsException.class).when(authDatabase).validateClientCredentials(CLIENT_ID, CLIENT_SECRET_BAD);
 		
 		CredentialGenerator credentialGenerator = Mockito.mock(CredentialGenerator.class);
-		Mockito.when(credentialGenerator.generateRandomBearerToken()).thenReturn(BEARER_TOKEN);
+		Mockito.when(credentialGenerator.generateJwtBearerToken(CLIENT_ID)).thenReturn(BEARER_TOKEN);
 		
   		AuthController authController = new AuthController();
   		authController.authDatabase = authDatabase;
