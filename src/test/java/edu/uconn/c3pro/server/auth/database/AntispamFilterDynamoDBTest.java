@@ -3,6 +3,7 @@ package edu.uconn.c3pro.server.auth.database;
 import java.io.UnsupportedEncodingException;
 
 import org.assertj.core.api.Assertions;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -10,6 +11,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
 
+@Ignore
 public class AntispamFilterDynamoDBTest {
 
   	@Test
